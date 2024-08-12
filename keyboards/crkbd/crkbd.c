@@ -46,21 +46,36 @@ static void oled_render_layer_state(void) {
     oled_write_P(PSTR("Layer: "), false);
     switch (get_highest_layer(layer_state)) {
         case 0:
-            oled_write_ln_P(PSTR("Default"), false);
+            oled_write_ln_P(PSTR("Base"), false);
             break;
         case 1:
-            oled_write_ln_P(PSTR("Lower"), false);
+            oled_write_ln_P(PSTR("Symbols"), false);
             break;
         case 2:
-            oled_write_ln_P(PSTR("Raise"), false);
+            oled_write_ln_P(PSTR("Numbers"), false);
             break;
         case 3:
-            oled_write_ln_P(PSTR("Adjust"), false);
+            oled_write_ln_P(PSTR("Settings"), false);
+            break;
+        case 4:
+            oled_write_ln_P(PSTR("AltGr"), false);
             break;
         default:
             oled_write_ln_P(PSTR("Undef"), false);
             break;
+            
     }
+
+    
+}
+
+static void oled_render_toggle_status(void) {
+    // Host Keyboard LED Status
+    led_t led_state = host_keyboard_led_state();
+    oled_write_P(led_state.num_lock ? PSTR("[NUM]") : PSTR("[   ]"), false);
+    oled_write_P(led_state.caps_lock ? PSTR("[CAP]") : PSTR("[   ]"), false);
+    oled_write_P(led_state.scroll_lock ? PSTR("[SCR]") : PSTR("[   ]"), false);
+    oled_write_ln_P( PSTR("    "), false);
 }
 
 char     key_name = ' ';
@@ -137,6 +152,7 @@ __attribute__((weak)) void oled_render_logo(void) {
         0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb3, 0xb4,
         0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4,
         0};
+
     // clang-format on
     oled_write_P(crkbd_logo, false);
 }
@@ -147,6 +163,8 @@ bool oled_task_kb(void) {
     }
     if (is_keyboard_master()) {
         oled_render_layer_state();
+        oled_render_toggle_status();
+        oled_write_ln_P( PSTR("    "), false);
         oled_render_keylog();
     } else {
         oled_render_logo();
