@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "quantum.h"
+#include "ctype.h"
+#include "time.h"
 
 #ifdef SWAP_HANDS_ENABLE
 __attribute__((weak)) const keypos_t PROGMEM hand_swap_config[MATRIX_ROWS][MATRIX_COLS] = {
@@ -29,8 +31,7 @@ __attribute__((weak)) const keypos_t PROGMEM hand_swap_config[MATRIX_ROWS][MATRI
     {{0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}},
     {{0, 1}, {1, 1}, {2, 1}, {3, 1}, {4, 1}, {5, 1}},
     {{0, 2}, {1, 2}, {2, 2}, {3, 2}, {4, 2}, {5, 2}},
-    {{0, 3}, {1, 3}, {2, 3}, {3, 3}, {4, 3}, {5, 3}}
-};
+    {{0, 3}, {1, 3}, {2, 3}, {3, 3}, {4, 3}, {5, 3}}};
 #endif
 
 #ifdef OLED_ENABLE
@@ -39,43 +40,64 @@ oled_rotation_t oled_init_kb(oled_rotation_t rotation) {
     if (!is_keyboard_master()) {
         return OLED_ROTATION_180; // flips the display 180 degrees if offhand
     }
-    return rotation;
+
+    return OLED_ROTATION_270;
 }
 
 static void oled_render_layer_state(void) {
-    oled_write_P(PSTR("Layer: "), false);
+    oled_write_P(PSTR("Layer"), false);
     switch (get_highest_layer(layer_state)) {
         case 0:
-            oled_write_ln_P(PSTR("Base"), false);
+            oled_write_P(PSTR("Base "), false);
             break;
         case 1:
-            oled_write_ln_P(PSTR("Symbols"), false);
+            oled_write_P(PSTR("Symbl"), false);
             break;
         case 2:
-            oled_write_ln_P(PSTR("Numbers"), false);
+            oled_write_P(PSTR("Numbr"), false);
             break;
         case 3:
-            oled_write_ln_P(PSTR("Settings"), false);
+            oled_write_P(PSTR("Setng"), false);
             break;
         case 4:
-            oled_write_ln_P(PSTR("AltGr"), false);
+            oled_write_P(PSTR("AltGr"), false);
             break;
         default:
-            oled_write_ln_P(PSTR("Undef"), false);
+            oled_write_P(PSTR("UNDEF"), false);
             break;
-            
     }
 
-    
+    oled_write_ln_P(PSTR(""), false);
 }
+
+bool is_shift_pressed = false;
+bool is_alt_pressed = false;
+bool is_control_pressed = false;
+
 
 static void oled_render_toggle_status(void) {
     // Host Keyboard LED Status
+    if (is_shift_pressed) {
+        oled_write_P(PSTR("SFT X"), false);
+    } else {
+        oled_write_P(PSTR("SFT  "), false);
+    }
+    if (is_control_pressed) {
+        oled_write_P(PSTR("CTL X"), false);
+    } else {
+        oled_write_P(PSTR("CTL  "), false);
+    }
+    if (is_alt_pressed) {
+        oled_write_P(PSTR("ALT X"), false);
+    } else {
+        oled_write_P(PSTR("ALT  "), false);
+    }
+    
     led_t led_state = host_keyboard_led_state();
-    oled_write_P(led_state.num_lock ? PSTR("[NUM]") : PSTR("[   ]"), false);
     oled_write_P(led_state.caps_lock ? PSTR("[CAP]") : PSTR("[   ]"), false);
-    oled_write_P(led_state.scroll_lock ? PSTR("[SCR]") : PSTR("[   ]"), false);
-    oled_write_ln_P( PSTR("    "), false);
+    // oled_write_P(led_state.num_lock ? PSTR("[NUM]") : PSTR("[   ]"), false);
+    
+
 }
 
 char     key_name = ' ';
@@ -83,7 +105,7 @@ uint16_t last_keycode;
 uint8_t  last_row;
 uint8_t  last_col;
 
-static const char PROGMEM code_to_name[60] = {' ', ' ', ' ', ' ', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'R', 'E', 'B', 'T', '_', '-', '=', '[', ']', '\\', '#', ';', '\'', '`', ',', '.', '/', ' ', ' ', ' '};
+static const char PROGMEM code_to_name[60] = {'Z', 'X', 'V', 'N', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'R', 'E', 'B', 'T', '_', '-', '=', '[', ']', '\\', '#', ';', '\'', '`', ',', '.', '/', 'C', ' ', ' '};
 
 static void set_keylog(uint16_t keycode, keyrecord_t *record) {
     // save the row and column (useful even if we can't find a keycode to show)
@@ -113,37 +135,107 @@ static void set_keylog(uint16_t keycode, keyrecord_t *record) {
     key_name = pgm_read_byte(&code_to_name[keycode]);
 }
 
-static const char *depad_str(const char *depad_str, char depad_char) {
-    while (*depad_str == depad_char)
-        ++depad_str;
-    return depad_str;
-}
-
 static void oled_render_keylog(void) {
+    oled_write_P(PSTR("KyLog"), false);
+    oled_write_char(' ', false);
     oled_write_char('0' + last_row, false);
     oled_write_P(PSTR("x"), false);
-    oled_write_char('0' + last_col, false);
-    oled_write_P(PSTR(", k"), false);
-    const char *last_keycode_str = get_u16_str(last_keycode, ' ');
-    oled_write(depad_str(last_keycode_str, ' '), false);
-    oled_write_P(PSTR(":"), false);
-    oled_write_char(key_name, false);
+    if (last_row == 3 || last_row == 7) {
+        oled_write_char('0' + last_col - 3, false);
+    } else {
+        oled_write_char('0' + last_col, false);
+    }
+    oled_write_P(PSTR(" "), false);
+    if (last_row == 2 && last_col == 0) {
+        oled_write_P(PSTR("CTRL "), false);
+    } else if (last_row == 3 && last_col == 4) {
+        oled_write_P(PSTR("SHIFT"), false);
+    } else if (last_row == 7 && last_col == 3) {
+        oled_write_P(PSTR(" ALT "), false);
+    } else if (last_row == 3 && last_col == 3) {
+        if (get_highest_layer(layer_state) == 0) {
+            oled_write_P(PSTR(" GUI "), false);
+        } else {
+            oled_write_P(PSTR("LAYER"), false);
+        }
+    }
+
+    else {
+        switch (key_name) {
+            case 'R':
+                oled_write_P(PSTR("ENTER"), false);
+                break;
+            case 'E':
+                oled_write_P(PSTR("ESCPE"), false);
+                break;
+            case 'B':
+                oled_write_P(PSTR("BCKSP"), false);
+                break;
+            case 'T':
+                oled_write_P(PSTR(" TAB "), false);
+                break;
+            case ']':
+                oled_write_P(PSTR("DELET"), false);
+                break;
+            case '_':
+                oled_write_P(PSTR("SPACE"), false);
+                break;
+            case 'C':
+                oled_write_P(PSTR("CAPS "), false);
+                break;
+            case ';':
+                oled_write_P(PSTR("CEDLA"), false);
+                break;
+            case '/':
+                oled_write_P(PSTR("  "), false);
+                oled_write_char(toupper('-'), false);
+                oled_write_P(PSTR("  "), false);
+                break;
+            case '#':
+                oled_write_P(PSTR("  "), false);
+                oled_write_char(toupper('~'), false);
+                oled_write_P(PSTR("  "), false);
+                break;
+            case '\'':
+                oled_write_P(PSTR("ORDIN"), false);
+                break;
+            default:
+                if (key_name != ' ') {
+                    oled_write_P(PSTR("  "), false);
+                    oled_write_char(toupper(key_name), false);
+                    oled_write_P(PSTR("  "), false);
+                } else {
+                    oled_write_P(PSTR("LAYER"), false);
+                }
+                break;
+        }
+    }
 }
 
-// static void render_bootmagic_status(bool status) {
-//     /* Show Ctrl-Gui Swap options */
-//     static const char PROGMEM logo[][2][3] = {
-//         {{0x97, 0x98, 0}, {0xb7, 0xb8, 0}},
-//         {{0x95, 0x96, 0}, {0xb5, 0xb6, 0}},
-//     };
-//     if (status) {
-//         oled_write_ln_P(logo[0][0], false);
-//         oled_write_ln_P(logo[0][1], false);
-//     } else {
-//         oled_write_ln_P(logo[1][0], false);
-//         oled_write_ln_P(logo[1][1], false);
-//     }
-// }
+int         keyCounter = 0;
+static void oled_render_pressed_keys(void) {
+    // Display static text
+    oled_write_P(PSTR("     "), false); // Clear the display line (assuming 5 spaces clear)
+    oled_write_P(PSTR("CONTR"), false);
+
+    char buffer[11];                                    // Buffer to hold the string representation of keyCounter
+    snprintf(buffer, sizeof(buffer), "%d", keyCounter); // Convert keyCounter to a string
+
+    int len     = strlen(buffer); // Length of the number as a string
+    int padding = (5 - len) / 2;  // Calculate padding
+
+    char centered_text[5 + 1];     // Buffer for centered text
+    memset(centered_text, ' ', 5); // Fill buffer with spaces
+    centered_text[5] = '\0';       // Null-terminate the string
+
+    // Copy the number into the centered position
+    strncpy(centered_text + padding, buffer, len);
+
+    // Write the centered text to the OLED display
+    oled_write(centered_text, false);
+
+    return;
+}
 
 __attribute__((weak)) void oled_render_logo(void) {
     // clang-format off
@@ -163,9 +255,13 @@ bool oled_task_kb(void) {
     }
     if (is_keyboard_master()) {
         oled_render_layer_state();
+
         oled_render_toggle_status();
-        oled_write_ln_P( PSTR("    "), false);
+        oled_write_ln_P(PSTR("    "), false);
         oled_render_keylog();
+
+        oled_render_pressed_keys();
+        // oled_render_current_time();
     } else {
         oled_render_logo();
     }
@@ -175,7 +271,19 @@ bool oled_task_kb(void) {
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (record->event.pressed) {
         set_keylog(keycode, record);
+        keyCounter++;
     }
-    return process_record_user(keycode, record);
+
+    last_row = record->event.key.row;
+    last_col = record->event.key.col;
+
+    if (last_row == 3 && last_col == 4) {
+        is_shift_pressed = !is_shift_pressed;
+    } else if (last_row == 2 && last_col == 0) {
+        is_control_pressed = !is_control_pressed;
+    } else if (last_row == 7 && last_col == 3) {
+        is_alt_pressed = !is_alt_pressed;
+    } 
+    return true;
 }
 #endif // OLED_ENABLE
