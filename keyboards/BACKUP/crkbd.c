@@ -44,220 +44,63 @@ oled_rotation_t oled_init_kb(oled_rotation_t rotation) {
     return OLED_ROTATION_270;
 }
 
-static const char PROGMEM word_Layer[] = {
-       0x0b,0x20, 0x38, 0x24, 0x31,
-      0};
-static const char PROGMEM word_EMPTYLINE[] = {
-        0x80,0x80, 0x80, 0x80, 0x80,
-        0};
-
 static void oled_render_layer_state(void) {
-    static const char PROGMEM layer_ui_default[] = {
-        0x5b,0x5c, 0x5d, 0x5e, 0x5f,
-        0x7b,0x7c, 0x7d, 0x7e, 0x7f,
-        0x9b,0x9c, 0x9d, 0x9e, 0x9f,
-        0};
-    static const char PROGMEM layer_ui_0[] = {
-        0xb9,0xba, 0x5d, 0x5e, 0x5f,
-        0xd9,0xda, 0x7d, 0x7e, 0x7f,
-        0x9b,0x9c, 0x9d, 0x9e, 0x9f,
-        0};
-    static const char PROGMEM layer_ui_1[] = {
-        0x5b,0x5c, 0x5d, 0xbb, 0xbc,
-        0x7b,0x7c, 0x7d, 0xdb, 0xdc,
-        0x9b,0x9c, 0x9d, 0x9e, 0x9f,
-        0};
-    static const char PROGMEM layer_ui_2[] = {
-        0x5b,0x5c, 0x5d, 0x5e, 0x5f,
-        0x7b,0x7c, 0xbd, 0xdd, 0x7f,
-        0x9b,0x9c, 0x9d, 0x9e, 0x9f,
-        0};
-    static const char PROGMEM layer_ui_3[] = {
-        0x5b,0x5c, 0x5d, 0x5e, 0x5f,
-        0x7b,0x7c, 0x7d, 0x7e, 0x7f,
-        0xbe,0xbf, 0x9d, 0x9e, 0x9f,
-        0};
-    static const char PROGMEM layer_ui_4[] = {
-        0x5b,0x5c, 0x5d, 0x5e, 0x5f,
-        0x7b,0x7c, 0x7d, 0x7e, 0x7f,
-        0x9b,0x9c, 0x9d, 0xde, 0xdf,
-        0};
-
-
-
-    oled_write_P(word_Layer, false); //need to fix this 
-
-    
+    oled_write_P(PSTR("Layer"), false);
     switch (get_highest_layer(layer_state)) {
         case 0:
-            oled_write_P(layer_ui_0, false);
+            oled_write_P(PSTR("Base "), false);
             break;
         case 1:
-            oled_write_P(layer_ui_1, false);
+            oled_write_P(PSTR("Symbl"), false);
             break;
         case 2:
-            oled_write_P(layer_ui_2, false);
+            oled_write_P(PSTR("Numbr"), false);
             break;
         case 3:
-            oled_write_P(layer_ui_3, false);
+            oled_write_P(PSTR("Setng"), false);
             break;
         case 4:
-            oled_write_P(layer_ui_4, false);
+            oled_write_P(PSTR("AltGr"), false);
+            break;
+        case 5:
+            oled_write_P(PSTR(" OS  "), false);
             break;
         default:
-            oled_write_P(layer_ui_default, false);
+            oled_write_P(PSTR("UNDEF"), false);
             break;
-    } 
+    }
 
-    
-    oled_write_P(word_EMPTYLINE, false);
-    oled_write_P(word_EMPTYLINE, false);
+    oled_write_ln_P(PSTR(""), false);
 }
-
 
 bool is_shift_pressed = false;
 bool is_alt_pressed = false;
 bool is_control_pressed = false;
-bool is_gui_pressed = false;
-
-static const char PROGMEM word_Modif[] = {
-       0x0c,0x2e, 0x23, 0x28, 0x25,
-      0};
 
 
 static void oled_render_toggle_status(void) {
-    oled_write_P(word_Modif, false); //need to fix this 
-
-   //ONLY TOP OF FRAME
-    static const char PROGMEM modefier_ui_top_off[] = {
-        0x57,0x58, 0x58, 0x58, 0x59,
-        0};
-    static const char PROGMEM modefier_ui_top_on[] = {
-        0x77,0x78, 0x78, 0x78, 0x79,
-        0};
-    //TOP AND BOTTOM OF FRAME
-    static const char PROGMEM modefier_ui_mid_off[] = {
-        0x92,0x93, 0x93, 0x93, 0x94,
-        0};
-    static const char PROGMEM modefier_ui_mid_on[] = {
-        0x95,0x96, 0x96, 0x96, 0x97,
-        0};
-    static const char PROGMEM modefier_ui_mid_top_on[] = {
-        0xb2,0xb3, 0xb3, 0xb3, 0xb4,
-        0};
-    static const char PROGMEM modefier_ui_mid_bot_on[] = {
-        0xd2,0xd3, 0xd3, 0xd3, 0xd4,
-        0};
-
-
-    //ONLY BOTTOM OF FRAME
-    static const char PROGMEM modefier_ui_bot_off[] = {
-        0x54,0x55, 0x55, 0x55, 0x56,
-        0};
-    static const char PROGMEM modefier_ui_bot_on[] = {
-        0x74,0x75, 0x75, 0x75, 0x76,
-        0};
-
-
-   
-    static const char PROGMEM modefier_ui_shift_off[] = {
-        0x5a,0x12, 0x05, 0x13, 0x9a,
-
-        0};
-    static const char PROGMEM modefier_ui_shift_on[] = {
-        0x7a,0xd7, 0xb7, 0xd8, 0x99,
-        0};
-    
-    static const char PROGMEM modefier_ui_control_off[] = {
-        0x5a,0x02, 0x13, 0x0b, 0x9a,
-        0};
-    static const char PROGMEM modefier_ui_control_on[] = {
-        0x7a,0xb6, 0xd8, 0xb8, 0x99,
-        0};
-
-      static const char PROGMEM modefier_ui_alt_off[] = {
-        0x5a,0x85, 0x0b, 0x13, 0x9a,
-        0};
-    static const char PROGMEM modefier_ui_alt_on[] = {
-        0x7a,0xb5, 0xb8, 0xd8, 0x99,
-        0};
-    
-  static const char PROGMEM modefier_ui_super_off[] = {
-        0x5a,0x12, 0x0f, 0x11, 0x9a,
-        0};
-    static const char PROGMEM modefier_ui_super_on[] = {
-        0x7a,0xd7, 0xd5, 0xd6, 0x99,
-        0};
-    
-
-
-
-
-
-
     // Host Keyboard LED Status
     if (is_shift_pressed) {
-        oled_write_P(modefier_ui_top_on, false);
-        oled_write_P(modefier_ui_shift_on, false);
+        oled_write_P(PSTR("SFT X"), false);
     } else {
-        oled_write_P(modefier_ui_top_off, false);
-        oled_write_P(modefier_ui_shift_off, false);
+        oled_write_P(PSTR("SFT  "), false);
     }
-
-    if(is_shift_pressed && is_control_pressed){
-        oled_write_P(modefier_ui_mid_on, false);
-    } else if (is_shift_pressed && !is_control_pressed) {
-        oled_write_P(modefier_ui_mid_top_on, false);
-    } else if (!is_shift_pressed && is_control_pressed){
-        oled_write_P(modefier_ui_mid_bot_on, false);
-    } else {
-        oled_write_P(modefier_ui_mid_off, false);
-    }
-
     if (is_control_pressed) {
-        oled_write_P(modefier_ui_control_on, false);
+        oled_write_P(PSTR("CTL X"), false);
     } else {
-        oled_write_P(modefier_ui_control_off, false);
+        oled_write_P(PSTR("CTL  "), false);
     }
-
-    if(is_control_pressed && is_alt_pressed){
-        oled_write_P(modefier_ui_mid_on, false);
-    } else if (is_control_pressed && !is_alt_pressed) {
-        oled_write_P(modefier_ui_mid_top_on, false);
-    } else if (!is_control_pressed && is_alt_pressed){
-        oled_write_P(modefier_ui_mid_bot_on, false);
-    } else {
-        oled_write_P(modefier_ui_mid_off, false);
-    }
-
-
     if (is_alt_pressed) {
-        oled_write_P(modefier_ui_alt_on, false);
+        oled_write_P(PSTR("ALT X"), false);
     } else {
-        oled_write_P(modefier_ui_alt_off, false);
+        oled_write_P(PSTR("ALT  "), false);
     }
+    
+    led_t led_state = host_keyboard_led_state();
+    oled_write_P(led_state.caps_lock ? PSTR("[CAP]") : PSTR("[   ]"), false);
+    // oled_write_P(led_state.num_lock ? PSTR("[NUM]") : PSTR("[   ]"), false);
+    
 
-
-    if(is_alt_pressed && is_gui_pressed){
-        oled_write_P(modefier_ui_mid_on, false);
-    } else if (is_alt_pressed && !is_gui_pressed) {
-        oled_write_P(modefier_ui_mid_top_on, false);
-    } else if (!is_alt_pressed && is_gui_pressed){
-        oled_write_P(modefier_ui_mid_bot_on, false);
-    } else {
-        oled_write_P(modefier_ui_mid_off, false);
-    }
-
-    if (is_gui_pressed) {
-        oled_write_P(modefier_ui_super_on, false);
-        oled_write_P(modefier_ui_bot_on, false);
-        
-
-    } else {
-        oled_write_P(modefier_ui_super_off, false);
-        oled_write_P(modefier_ui_bot_off, false);
-        
-    }
 }
 
 char     key_name = ' ';
@@ -266,7 +109,6 @@ uint8_t  last_row;
 uint8_t  last_col;
 
 static const char PROGMEM code_to_name[60] = {'Z', 'X', 'V', 'N', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'R', 'E', 'B', 'T', '_', '-', '=', '[', ']', '\\', '#', ';', '\'', '`', ',', '.', '/', 'C', ' ', ' '};
-
 
 static void set_keylog(uint16_t keycode, keyrecord_t *record) {
     // save the row and column (useful even if we can't find a keycode to show)
@@ -295,7 +137,7 @@ static void set_keylog(uint16_t keycode, keyrecord_t *record) {
     // update keylog
     key_name = pgm_read_byte(&code_to_name[keycode]);
 }
-/*
+
 static void oled_render_keylog(void) {
     oled_write_P(PSTR("KyLog"), false);
     oled_write_char(' ', false);
@@ -372,9 +214,8 @@ static void oled_render_keylog(void) {
         }
     }
 }
-*/
+
 int         keyCounter = 0;
-/*
 static void oled_render_pressed_keys(void) {
     // Display static text
     oled_write_P(PSTR("     "), false); // Clear the display line (assuming 5 spaces clear)
@@ -398,12 +239,11 @@ static void oled_render_pressed_keys(void) {
 
     return;
 }
-*/
-__attribute__((weak)) void oled_render_logo(void) { //UPDATED
 
+__attribute__((weak)) void oled_render_logo(void) {
     // clang-format off
     static const char PROGMEM crkbd_logo[] = {
-        0x80,0x80, 0x81, 0x82, 0x83, 0x84, 0x80, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f, 0x90, 0x91, 0x80, 0x80,
+        0x80,0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f, 0x90, 0x91, 0x80, 0x80,
         0x80,0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0x80, 0x80, 
         0x80,0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf, 0xd0, 0xd1, 0x80, 0x80,
         0};
@@ -420,11 +260,11 @@ bool oled_task_kb(void) {
         oled_render_layer_state();
 
         oled_render_toggle_status();
-        //oled_write_ln_P(PSTR("    "), false);
-        //oled_render_keylog();
+        oled_write_ln_P(PSTR("    "), false);
+        oled_render_keylog();
 
-        //oled_render_pressed_keys();
-        //oled_render_current_time();
+        oled_render_pressed_keys();
+        // oled_render_current_time();
     } else {
         oled_render_logo();
     }
@@ -446,8 +286,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         is_control_pressed = !is_control_pressed;
     } else if (last_row == 7 && last_col == 3) {
         is_alt_pressed = !is_alt_pressed;
-    }  else if (last_row == 3 && last_col == 3) {
-        is_gui_pressed = !is_gui_pressed;
     } 
     return true;
 }
