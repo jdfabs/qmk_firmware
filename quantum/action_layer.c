@@ -25,7 +25,7 @@ __attribute__((weak)) layer_state_t default_layer_state_set_user(layer_state_t s
  */
 __attribute__((weak)) layer_state_t default_layer_state_set_kb(layer_state_t state) {
     return default_layer_state_set_user(state);
-}
+}__attribute__((weak)) layer_state_t d
 
 /** \brief Default Layer State Set
  *
